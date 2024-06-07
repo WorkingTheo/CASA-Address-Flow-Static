@@ -1,0 +1,58 @@
+{% extends "layouts/journey.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "casa/components/input/macro.njk" import casaGovukInput with context %}
+
+{% block journey_form %}
+  <div class="govuk-width-container">
+    <h1 class="govuk-heading-l">Enter the patient's address</h1>
+
+    {{ casaGovukInput({
+      label: {
+        text: "Address line 1"
+      },
+      classes: "govuk-!-width-two-thirds",
+      value: formData.addressLine1,
+      name: "addressLine1"
+    }) }}
+
+    {{ casaGovukInput({
+      label: {
+        text: "Address line 2 (optional)"
+      },
+      classes: "govuk-!-width-two-thirds",
+      value: formData.addressLine2,
+      name: "addressLine2"
+    }) }}
+
+    {{ casaGovukInput({
+      label: {
+        text: "Town or city"
+      },
+      classes: "govuk-!-width-two-thirds",
+      value: formData.town,
+      name: "town"
+    }) }}
+
+    {{ casaGovukInput({
+      label: {
+        text: "County"
+      },
+      classes: "govuk-!-width-two-thirds",
+      value: formData.county,
+      name: "county"
+    }) }}
+
+    {{ casaGovukInput({
+      label: {
+        text: "Postcode"
+      },
+      classes: "govuk-!-width-two-thirds",
+      value: formData.postCode,
+      name: "postCode"
+    }) }}
+
+    <a href='/post-code' class="govuk-link">
+      Find the patient's address
+    </a>
+  </div>
+{% endblock %}

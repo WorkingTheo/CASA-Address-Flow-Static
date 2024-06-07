@@ -99,6 +99,18 @@ const app = (
       setDataForPage(req, 'address-confiramtion', { address: req.body.address });
       res.redirect('/start');
     }
+  });
+
+  ancillaryRouter.use('/address-manual', (req: Request, res: Response) => {
+    if (req.method === 'GET') {
+      res.render('pages/address-manual.njk');
+    }
+
+    if (req.method === 'POST') {
+      const { addressLine1, addressLine2, town, county, postCode } = req.body; 
+      setDataForPage(req, 'address-confirmation', { address: `${addressLine1} - ${postCode}`});
+      res.redirect('/address-confirmation');
+    }
   })
 
   return mount(casaApp, {});
