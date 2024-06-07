@@ -9,6 +9,14 @@ import axios from 'axios';
 
 export const FOUND_ADDRESSES_DATA = 'found-addresses-data';
 
+function getDataForPage(req: Request, waypoint: string) {
+  return (req as any).casa.journeyContext.getDataForPage(waypoint);
+}
+
+function setDataForPage(req: Request, waypoint: string, data: any) {
+  (req as any).casa.journeyContext.setDataForPage(waypoint, data);
+}
+
 const app = (
   name: string,
   secret: string,
@@ -49,7 +57,7 @@ const app = (
 
   ancillaryRouter.use('/post-code', async (req: Request, res: Response) => {
     if (req.method === 'GET') {
-      res.locals.formData = (req as any).casa.journeyContext.getDataForPage('post-code');
+      res.locals.formData = getDataForPage(req, 'post-code');
       res.render('pages/post-code.njk');
     }
 
@@ -59,23 +67,23 @@ const app = (
       const data = req.body;
       const results = await axios.post<string[]>('http://localhost:3001/address', data);
       const addresses = results.data;
-      (req as any).casa.journeyContext.setDataForPage(FOUND_ADDRESSES_DATA, { addresses });
-      (req as any).casa.journeyContext.setDataForPage('post-code', { postcode: req.body.postcode });
+      setDataForPage(req, FOUND_ADDRESSES_DATA, { addresses });
+      setDataForPage(req, 'post-code', { postcode: req.body.postcode });
       res.redirect('/post-code-results');
     }
   });
 
   ancillaryRouter.use('/post-code-results', (req: Request, res: Response) => {
     if (req.method === 'GET') {
-      const { addresses } = (req as any).casa.journeyContext.getDataForPage(FOUND_ADDRESSES_DATA) as { addresses: string[] };
+      const { addresses } = getDataForPage(req, FOUND_ADDRESSES_DATA) as { addresses: string[] };
       const addressOptions = addresses.map(address => ({ value: address, text: address }));
       res.locals.addressOptions = addressOptions;
-      res.locals.formData = (req as any).casa.journeyContext.getDataForPage('post-code-results');
+      res.locals.formData = getDataForPage(req, 'post-code-results');
       res.render('pages/post-code-results.njk');
     }
 
     if(req.method === 'POST') {
-      (req as any).casa.journeyContext.setDataForPage('post-code-results', { address: req.body.address });
+      setDataForPage(req, 'post-code-results', { address: req.body.address });
       res.redirect('/start');
     }
   })
