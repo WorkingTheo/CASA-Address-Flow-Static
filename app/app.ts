@@ -84,6 +84,19 @@ const app = (
 
     if(req.method === 'POST') {
       setDataForPage(req, 'post-code-results', { address: req.body.address });
+      setDataForPage(req, 'address-confirmation', { address: req.body.address });
+      res.redirect('/address-confirmation');
+    }
+  });
+
+  ancillaryRouter.use('/address-confirmation', (req: Request, res: Response) => {
+    if (req.method === 'GET') {
+      res.locals.formData = getDataForPage(req, 'address-confirmation');
+      res.render('pages/address-confirmation');
+    }
+
+    if (req.method === 'POST') {
+      setDataForPage(req, 'address-confiramtion', { address: req.body.address });
       res.redirect('/start');
     }
   })
