@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",           // we use 'commonjs' module system, as is typical for Node apps
+    "outDir": "./dist",             // TS is transpiled into JS and placed in this directory
+    "esModuleInterop": true,        // TS treats commonjs modules similar to ES6 modules
+    "target": "es6",                // transpiled JS will be ES6 version, supported by all browsers
+    "resolveJsonModule": true,      // allow importing modules with '.json' extension
+    "typeRoots": [
+      "./typings",                  // this is where we keep custom type declarations
+      "./node_modules/**/*.d.ts",   // ensure that types not declared in '@types' still work
+      "./node_modules/@types"       // ensure all types declared in '@types' still work
+    ]
+  },
+  "include": ["app"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
+}
