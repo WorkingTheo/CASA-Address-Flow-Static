@@ -61,12 +61,17 @@ const app = (
   });
 
   ancillaryRouter.use('/start', (req: Request, res: Response) => {
-    res.render('pages/start.njk');
+    removeWaypointsFromJourneyContext(req, ['temp-address-confirmation']);
+
+    JourneyContext.putContext(req.session, (req as any).casa.journeyContext);
+    req.session.save(() => res.render('pages/start.njk'));
   });
 
   ancillaryRouter.use('/address-route', (req: Request, res: Response) => {
     const addressConfirmationData = getDataForPage(req, 'address-confirmation') as { address: string };
-    if(addressConfirmationData?.address !== undefined) {
+    console.log('address-route');
+    console.log({ data: addressConfirmationData });
+    if (addressConfirmationData?.address !== undefined) {
       res.redirect('/address-confirmation');
       return;
     }
@@ -75,7 +80,7 @@ const app = (
 
   ancillaryRouter.use('/search-again', (req: Request, res: Response) => {
     const waypointsToRemove = ['post-code', 'post-code-results', 'address-manual'];
-  
+
     removeWaypointsFromJourneyContext(req, waypointsToRemove);
     JourneyContext.putContext(req.session, (req as any).casa.journeyContext);
     req.session.save(() => res.redirect('/post-code'));
@@ -108,22 +113,27 @@ const app = (
       res.render('pages/post-code-results.njk');
     }
 
-    if(req.method === 'POST') {
+    if (req.method === 'POST') {
       setDataForPage(req, 'post-code-results', { address: req.body.address });
-      setDataForPage(req, 'address-confirmation', { address: req.body.address });
+      setDataForPage(req, 'temp-address-confirmation', { address: req.body.address });
       res.redirect('/address-confirmation');
     }
   });
 
   ancillaryRouter.use('/address-confirmation', (req: Request, res: Response) => {
+    const tempData = getDataForPage(req, 'temp-address-confirmation');
     if (req.method === 'GET') {
-      res.locals.formData = getDataForPage(req, 'address-confirmation');
+      const data = getDataForPage(req, 'address-confirmation');
+      res.locals.formData = tempData ?? data;
       res.render('pages/address-confirmation');
     }
 
     if (req.method === 'POST') {
-      setDataForPage(req, 'address-confiramtion', { address: req.body.address });
-      res.redirect('/start');
+      setDataForPage(req, 'address-confirmation', tempData);
+      removeWaypointsFromJourneyContext(req, ['temp-address-confirmation']);
+
+      JourneyContext.putContext(req.session, (req as any).casa.journeyContext);
+      req.session.save(() => res.redirect('/start'));
     }
   });
 
@@ -133,8 +143,8 @@ const app = (
     }
 
     if (req.method === 'POST') {
-      const { addressLine1, addressLine2, town, county, postCode } = req.body; 
-      setDataForPage(req, 'address-confirmation', { address: `${addressLine1} - ${postCode}`});
+      const { addressLine1, addressLine2, town, county, postCode } = req.body;
+      setDataForPage(req, 'temp-address-confirmation', { address: `${addressLine1} - ${postCode}` });
       res.redirect('/address-confirmation');
     }
   })
