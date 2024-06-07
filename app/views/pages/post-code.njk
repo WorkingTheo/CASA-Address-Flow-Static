@@ -1,0 +1,41 @@
+{% extends "layouts/journey.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "casa/components/input/macro.njk" import casaGovukInput with context %}
+
+{% block journey_form %}
+  <div class="govuk-width-container">
+    <h1 class="govuk-heading-l">Find an address</h1>
+
+    {{ govukButton({
+      text: "Find address"
+    }) }}
+
+    {{ casaGovukInput({
+      label: {
+        text: "Building number or name (optional)"
+      },
+      classes: "govuk-!-width-two-thirds",
+      hint: {
+        text: "For example, 15 or Prospect Cottage."
+      }, 
+      value: formData.searchString,
+      name: "searchString"
+    }) }}
+
+    {{ casaGovukInput({
+      label: {
+        text: "Postcode"
+      },
+      classes: "govuk-!-width-two-thirds",
+      hint: {
+        text: "For example, AA3 1AB."
+      },
+      value: formData.postcode,
+      name: "postcode"
+    }) }}
+
+    <a href='{{ waypointUrl({ waypoint: casa.waypoint, skipTo: "address-manual" }) }}' class="govuk-link">
+      Enter the patient's address manually 
+    </a>
+  </div>
+{% endblock %}

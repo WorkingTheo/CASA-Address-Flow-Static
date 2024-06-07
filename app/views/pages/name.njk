@@ -1,0 +1,18 @@
+{% extends "layouts/journey.njk" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "casa/components/input/macro.njk" import casaGovukInput with context %}
+
+{% block journey_form %}
+  <div class="govuk-width-container">
+    <h1 class="govuk-heading-l">Enter name</h1>
+
+    {{ casaGovukInput({
+      label: {
+        text: "Enter Name"
+      },
+      classes: "govuk-!-width-two-thirds",
+      value: formData.name,
+      name: "name"
+    }) }}
+  </div>
+{% endblock %}
