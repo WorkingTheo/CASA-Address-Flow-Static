@@ -1,7 +1,7 @@
 import path from 'path';
 import helmet from 'helmet';
 import { Store } from 'express-session';
-import { configure } from "@dwp/govuk-casa";
+import { JourneyContext, configure } from "@dwp/govuk-casa";
 import express, { Request, Response } from 'express';
 import { pages } from './pages';
 import { plan } from './plan';
@@ -16,6 +16,19 @@ function getDataForPage(req: Request, waypoint: string) {
 function setDataForPage(req: Request, waypoint: string, data: any) {
   (req as any).casa.journeyContext.setDataForPage(waypoint, data);
 }
+
+export const removeWaypointsFromJourneyContext = (req: Request, waypoints: string[], includeTempData?: boolean) => {
+  const allData = (req as any).casa.journeyContext.getData();
+  const allWaypoints = Object.keys(allData);
+  const removedData = allWaypoints.reduce((acc, waypoint) => {
+    const removeTempWaypoint = waypoints.includes(waypoint.replace('temp-', '')) && includeTempData;
+    if (waypoints.includes(waypoint) || removeTempWaypoint) {
+      return acc;
+    }
+    return { ...acc, [waypoint]: allData[waypoint] };
+  }, {});
+  (req as any).casa.journeyContext.setData(removedData);
+};
 
 const app = (
   name: string,
@@ -52,7 +65,20 @@ const app = (
   });
 
   ancillaryRouter.use('/address-route', (req: Request, res: Response) => {
+    const addressConfirmationData = getDataForPage(req, 'address-confirmation') as { address: string };
+    if(addressConfirmationData?.address !== undefined) {
+      res.redirect('/address-confirmation');
+      return;
+    }
     res.redirect('/post-code');
+  });
+
+  ancillaryRouter.use('/search-again', (req: Request, res: Response) => {
+    const waypointsToRemove = ['post-code', 'post-code-results', 'address-manual'];
+  
+    removeWaypointsFromJourneyContext(req, waypointsToRemove);
+    JourneyContext.putContext(req.session, (req as any).casa.journeyContext);
+    req.session.save(() => res.redirect('/post-code'));
   });
 
   ancillaryRouter.use('/post-code', async (req: Request, res: Response) => {
