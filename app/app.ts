@@ -6,6 +6,7 @@ import express, { Request, Response } from 'express';
 import { pages } from './pages';
 import { plan } from './plan';
 import axios from 'axios';
+import { checkYourAnswers } from './check-your-answers';
 
 export const FOUND_ADDRESSES_DATA = 'found-addresses-data';
 
@@ -61,10 +62,20 @@ const app = (
   });
 
   ancillaryRouter.use('/start', (req: Request, res: Response) => {
-    removeWaypointsFromJourneyContext(req, ['temp-address-confirmation']);
+    removeWaypointsFromJourneyContext(req, ['temp-address-confirmation', 'edit']);
 
     JourneyContext.putContext(req.session, (req as any).casa.journeyContext);
     req.session.save(() => res.render('pages/start.njk'));
+  });
+
+  ancillaryRouter.use('/check-your-answers', (req: Request, res: Response) => {
+    checkYourAnswers(req, res);
+    res.render('pages/check-your-answers.njk');
+  });
+
+  ancillaryRouter.use('/edit-address', (req: Request, res: Response) => {
+    setDataForPage(req, 'edit', { edit: true });
+    res.redirect('/address-confirmation');
   });
 
   ancillaryRouter.use('/address-route', (req: Request, res: Response) => {
@@ -131,9 +142,16 @@ const app = (
     if (req.method === 'POST') {
       setDataForPage(req, 'address-confirmation', tempData);
       removeWaypointsFromJourneyContext(req, ['temp-address-confirmation']);
+      const edit = getDataForPage(req, 'edit');
 
       JourneyContext.putContext(req.session, (req as any).casa.journeyContext);
-      req.session.save(() => res.redirect('/start'));
+      req.session.save(() => {
+        if(edit?.edit) {
+          res.redirect('/check-your-answers')
+        } else {
+          res.redirect('/start');
+        }
+      });
     }
   });
 
