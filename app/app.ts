@@ -18,6 +18,10 @@ function setDataForPage(req: Request, waypoint: string, data: any) {
   (req as any).casa.journeyContext.setDataForPage(waypoint, data);
 }
 
+function setBacklink(req: Request, res: Response) {
+  res.locals.casa.journeyPreviousUrl = req.session.previousUrl;
+}
+
 export const removeWaypointsFromJourneyContext = (req: Request, waypoints: string[], includeTempData?: boolean) => {
   const allData = (req as any).casa.journeyContext.getData();
   const allWaypoints = Object.keys(allData);
@@ -70,6 +74,7 @@ const app = (
 
   ancillaryRouter.use('/check-your-answers', (req: Request, res: Response) => {
     checkYourAnswers(req, res);
+    req.session.previousUrl = req.originalUrl;
     res.render('pages/check-your-answers.njk');
   });
 
@@ -80,8 +85,7 @@ const app = (
 
   ancillaryRouter.use('/address-route', (req: Request, res: Response) => {
     const addressConfirmationData = getDataForPage(req, 'address-confirmation') as { address: string };
-    console.log('address-route');
-    console.log({ data: addressConfirmationData });
+
     if (addressConfirmationData?.address !== undefined) {
       res.redirect('/address-confirmation');
       return;
@@ -100,17 +104,17 @@ const app = (
   ancillaryRouter.use('/post-code', async (req: Request, res: Response) => {
     if (req.method === 'GET') {
       res.locals.formData = getDataForPage(req, 'post-code');
+      setBacklink(req, res);
       res.render('pages/post-code.njk');
     }
 
     if (req.method === 'POST') {
-      //handle data consumption;
-      console.log({ body: req.body });
       const data = req.body;
       const results = await axios.post<string[]>('http://localhost:3001/address', data);
       const addresses = results.data;
       setDataForPage(req, FOUND_ADDRESSES_DATA, { addresses });
       setDataForPage(req, 'post-code', { postcode: req.body.postcode });
+      req.session.previousUrl = req.originalUrl;
       res.redirect('/post-code-results');
     }
   });
@@ -119,6 +123,7 @@ const app = (
     if (req.method === 'GET') {
       const { addresses } = getDataForPage(req, FOUND_ADDRESSES_DATA) as { addresses: string[] };
       const addressOptions = addresses.map(address => ({ value: address, text: address }));
+      setBacklink(req, res);
       res.locals.addressOptions = addressOptions;
       res.locals.formData = getDataForPage(req, 'post-code-results');
       res.render('pages/post-code-results.njk');
@@ -127,6 +132,7 @@ const app = (
     if (req.method === 'POST') {
       setDataForPage(req, 'post-code-results', { address: req.body.address });
       setDataForPage(req, 'temp-address-confirmation', { address: req.body.address });
+      req.session.previousUrl = req.originalUrl;
       res.redirect('/address-confirmation');
     }
   });
@@ -135,6 +141,7 @@ const app = (
     const tempData = getDataForPage(req, 'temp-address-confirmation');
     if (req.method === 'GET') {
       const data = getDataForPage(req, 'address-confirmation');
+      setBacklink(req, res);
       res.locals.formData = tempData ?? data;
       res.render('pages/address-confirmation');
     }
@@ -144,6 +151,7 @@ const app = (
       removeWaypointsFromJourneyContext(req, ['temp-address-confirmation']);
       const edit = getDataForPage(req, 'edit');
 
+      req.session.previousUrl = req.originalUrl;
       JourneyContext.putContext(req.session, (req as any).casa.journeyContext);
       req.session.save(() => {
         if(edit?.edit) {
@@ -157,12 +165,14 @@ const app = (
 
   ancillaryRouter.use('/address-manual', (req: Request, res: Response) => {
     if (req.method === 'GET') {
+      setBacklink(req, res);
       res.render('pages/address-manual.njk');
     }
 
     if (req.method === 'POST') {
       const { addressLine1, addressLine2, town, county, postCode } = req.body;
       setDataForPage(req, 'temp-address-confirmation', { address: `${addressLine1} - ${postCode}` });
+      req.session.previousUrl = req.originalUrl;
       res.redirect('/address-confirmation');
     }
   })
