@@ -1,0 +1,17 @@
+{% extends "layouts/main.njk" %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% block casaPageTitle %}
+  {{ t('start:pageTitle') }}
+{% endblock %}
+
+{% block content %}
+  <h1 class="govuk-heading-xl">
+    Check your answers
+  </h1>
+
+  {{ govukSummaryList({
+    classes: 'govuk-!-margin-bottom-9',
+    rows: patientDetailsRows
+  }) }}
+{% endblock %}
